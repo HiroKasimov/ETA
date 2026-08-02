@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yo'l taxtasi — ETA hisoblagich</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #12151f;
+    --panel: #1b2030;
+    --panel-2: #232a3d;
+    --amber: #f5a623;
+    --amber-dim: #a97318;
+    --text: #eae7db;
+    --text-dim: #6c7488;
+    --line: #2c3348;
+    --ok: #4a9d6f;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+  }
+  .wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px 16px 60px;
+  }
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 10px 4px 22px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 20px;
+  }
+  header h1 {
+    font-size: 18px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin: 0;
+    font-weight: 600;
+  }
+  header .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--ok);
+    display: inline-block;
+    margin-right: 8px;
+    box-shadow: 0 0 8px var(--ok);
+  }
+  header .clock {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--amber);
+    font-size: 15px;
+    letter-spacing: 0.05em;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .card h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    margin: 0 0 14px;
+    font-weight: 600;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 6px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  .tab.active {
+    color: var(--bg);
+    background: var(--amber);
+    border-color: var(--amber);
+    font-weight: 600;
+  }
+
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .field input, .field select {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    padding: 12px 12px;
+    border-radius: 7px;
+    outline: none;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--amber);
+  }
+
+  .mode-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .mode-grid button {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+    border-radius: 7px;
+    padding: 10px 4px;
+    font-size: 11px;
+    font-family: 'Space Grotesk', sans-serif;
+    cursor: pointer;
+  }
+  .mode-grid button.active {
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  .btn {
+    width: 100%;
+    background: var(--amber);
+    color: #14161f;
+    border: none;
+    border-radius: 8px;
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .btn:active { transform: scale(0.99); }
+  .btn.secondary {
+    background: transparent;
+    border: 1px solid var(--amber-dim);
+    color: var(--amber);
+  }
+
+  /* Departure board rows */
+  .board-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 12px 10px;
+    border-bottom: 1px dashed var(--line);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .board-row:last-child { border-bottom: none; }
+  .board-row .mode-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .board-row .sub {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .flap {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--amber);
+    letter-spacing: 0.03em;
+    min-width: 64px;
+    text-align: right;
+  }
+  .flap.time { color: var(--text); }
+
+  .empty-note {
+    font-size: 12px;
+    color: var(--text-dim);
+    padding: 4px 10px 0;
+  }
+
+  .status {
+    font-size: 12px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 4px;
+  }
+  .status.ok { color: var(--ok); }
+
+  .hidden { display: none !important; }
+
+  ::selection { background: var(--amber); color: #14161f; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1><span class="dot"></span>Yo'l taxtasi</h1>
+    <div class="clock" id="clock">--:--</div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="calc">Hisobla</div>
+    <div class="tab" data-tab="reverse">Chiqish</div>
+    <div class="tab" data-tab="log">Safar qo'sh</div>
+  </div>
+
+  <!-- HISOBLA -->
+  <div class="card panel" id="panel-calc">
+    <h2>Masofa → taxminiy vaqt</h2>
+    <div class="field">
+      <label>Masofa (km)</label>
+      <input type="number" step="0.1" min="0" id="calc-distance" placeholder="masalan 10">
+    </div>
+    <button class="btn" id="calc-btn">Hisoblash</button>
+  </div>
+
+  <div class="card hidden" id="calc-results">
+    <h2>Natija</h2>
+    <div id="calc-board"></div>
+  </div>
+
+  <!-- CHIQISH (reverse) -->
+  <div class="card panel hidden" id="panel-reverse">
+    <h2>Yetib borish vaqtidan — chiqish vaqti</h2>
+    <div class="field">
+      <label>Masofa (km)</label>
+      <input type="number" step="0.1" min="0" id="rev-distance" placeholder="masalan 10">
+    </div>
+    <div class="field">
+      <label>Nechida yetib borishing kerak</label>
+      <input type="time" id="rev-time">
+    </div>
+    <button class="btn" id="rev-btn">Chiqish vaqtini hisobla</button>
+  </div>
+
+  <div class="card hidden" id="rev-results">
+    <h2>Tavsiya etilgan chiqish vaqti</h2>
+    <div id="rev-board"></div>
+  </div>
+
+  <!-- SAFAR QO'SHISH -->
+  <div class="card panel hidden" id="panel-log">
+    <h2>Yangi safarni yozib qo'yish</h2>
+    <div class="field">
+      <label>Masofa (km)</label>
+      <input type="number" step="0.1" min="0" id="log-distance" placeholder="masalan 1.7">
+    </div>
+    <div class="field">
+      <label>Transport turi</label>
+      <div class="mode-grid" id="log-mode-grid"></div>
+    </div>
+
+    <div class="field" style="text-align:center; padding:6px 0 4px;">
+      <div id="timer-display" style="font-family:'IBM Plex Mono',monospace; font-size:34px; color:var(--amber); letter-spacing:0.04em;">00:00</div>
+      <div class="sub" id="timer-hint" style="color:var(--text-dim); font-size:11px; margin-top:2px;">chiqish vaqtida "Boshladim" bos</div>
+    </div>
+    <div style="display:flex; gap:8px; margin-bottom:14px;">
+      <button class="btn" id="timer-start-btn">🟢 Boshladim</button>
+      <button class="btn secondary hidden" id="timer-stop-btn">🔴 Yetib keldim</button>
+    </div>
+
+    <div class="field">
+      <label>Sarflangan vaqt (daqiqa) — avtomatik to'ladi, kerak bo'lsa qo'lda ham o'zgartirsa bo'ladi</label>
+      <input type="number" step="1" min="0" id="log-duration" placeholder="masalan 25">
+    </div>
+    <button class="btn" id="log-btn">Saqlash</button>
+    <div class="status" id="log-status"></div>
+  </div>
+
+</div>
+
+<!-- Sozlanmagan Firebase haqida ogohlantirish -->
+<div class="card hidden" id="config-warning" style="border-color:#a94418;">
+  <h2 style="color:#f5a623;">Firebase hali ulanmagan</h2>
+  <div class="empty-note" style="padding:0;">
+    Hisoblash standart (taxminiy) tezliklar bilan ishlayapti. Shaxsiy tarixga
+    asoslangan hisoblash uchun faylning pastidagi <code>firebaseConfig</code>
+    qismiga Firebase Console'dan olingan web app config'ni qo'y.
+  </div>
+</div>
+
+<!-- ASOSIY MANTIQ: oddiy skript, hech qanday tashqi kutubxonaga bog'liq emas.
+     Tarmoq yoki Firebase ishlamasa ham tab, kalkulyator va soat ishlashda davom etadi. -->
+<script>
+  const MODES = ["walk", "bus", "scooter", "car"];
+  const MODE_LABELS = { walk: "Piyoda", bus: "Bus", scooter: "Skuter", car: "Mashina" };
+  // Yandex Maps'dan olingan real Uy<->Ish safari asosida hisoblangan
+  // boshlang'ich tezliklar (km/soat) — foydalanuvchining shaxsiy tarixi
+  // to'planguncha shu qiymatlar ishlatiladi:
+  //   Piyoda:  12 km / 128 daq  = 5.6 km/soat
+  //   Bus:     15 km / 69 daq   = 13.0 km/soat
+  //   Skuter:  13 km / 72 daq   = 10.8 km/soat
+  //   Mashina: 15 km / 26 daq   = 34.6 km/soat
+  const DEFAULT_SPEED_KMH = { walk: 5.6, bus: 13.0, scooter: 10.8, car: 34.6 };
+  const BUFFER_MINUTES = 10;
+
+  // Bu funksiya boshida faqat standart tezlik bilan ishlaydi.
+  // Firebase muvaffaqiyatli ulansa, window.getAverageSpeedOverride shu bilan almashtiriladi.
+  window.getAverageSpeed = async function (mode) {
+    return { speedKmh: DEFAULT_SPEED_KMH[mode], sampleSize: 0 };
+  };
+  window.saveTrip = async function () {
+    return { ok: false, reason: "Firebase hali ulanmagan" };
+  };
+
+  async function estimateAllModes(distanceKm) {
+    const out = [];
+    for (const mode of MODES) {
+      const { speedKmh, sampleSize } = await window.getAverageSpeed(mode);
+      const minutes = Math.round((distanceKm / speedKmh) * 60 + BUFFER_MINUTES);
+      out.push({ mode, label: MODE_LABELS[mode], minutes, sampleSize });
+    }
+    return out.sort((a, b) => a.minutes - b.minutes);
+  }
+
+  function renderBoard(container, rows, kind) {
+    container.innerHTML = "";
+    rows.forEach(r => {
+      const row = document.createElement("div");
+      row.className = "board-row";
+      const noteHtml = r.sampleSize === 0
+        ? '<span class="sub">taxminiy, hali tarix yo\'q</span>'
+        : `<span class="sub">${r.sampleSize} ta safar asosida</span>`;
+      if (kind === "calc") {
+        row.innerHTML = `
+          <div><div class="mode-name">${r.label}</div>${noteHtml}</div>
+          <div class="flap">${r.minutes}</div>
+          <div class="sub">daqiqa</div>`;
+      } else {
+        row.innerHTML = `
+          <div><div class="mode-name">${r.label}</div>${noteHtml}</div>
+          <div class="flap time">${r.departure}</div>
+          <div class="sub">chiq</div>`;
+      }
+      container.appendChild(row);
+    });
+  }
+
+  // Tabs
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      ["calc", "reverse", "log"].forEach(name => {
+        document.getElementById(`panel-${name}`)?.classList.toggle("hidden", name !== tab.dataset.tab);
+      });
+      document.getElementById("calc-results").classList.add("hidden");
+      document.getElementById("rev-results").classList.add("hidden");
+    });
+  });
+
+  // Calc
+  document.getElementById("calc-btn").addEventListener("click", async () => {
+    const distance = parseFloat(document.getElementById("calc-distance").value);
+    if (!distance || distance <= 0) return;
+    const btn = document.getElementById("calc-btn");
+    btn.textContent = "Hisoblanmoqda...";
+    try {
+      const results = await estimateAllModes(distance);
+      renderBoard(document.getElementById("calc-board"), results, "calc");
+      document.getElementById("calc-results").classList.remove("hidden");
+    } finally {
+      btn.textContent = "Hisoblash";
+    }
+  });
+
+  // Reverse
+  document.getElementById("rev-btn").addEventListener("click", async () => {
+    const distance = parseFloat(document.getElementById("rev-distance").value);
+    const timeStr = document.getElementById("rev-time").value;
+    if (!distance || distance <= 0 || !timeStr) return;
+    const btn = document.getElementById("rev-btn");
+    btn.textContent = "Hisoblanmoqda...";
+    try {
+      const [h, m] = timeStr.split(":").map(Number);
+      const arrival = new Date();
+      arrival.setHours(h, m, 0, 0);
+      if (arrival.getTime() < Date.now()) arrival.setDate(arrival.getDate() + 1);
+
+      const results = await estimateAllModes(distance);
+      const withDeparture = results.map(r => {
+        const dep = new Date(arrival.getTime() - r.minutes * 60000);
+        const hh = String(dep.getHours()).padStart(2, "0");
+        const mm = String(dep.getMinutes()).padStart(2, "0");
+        return { ...r, departure: `${hh}:${mm}` };
+      });
+      renderBoard(document.getElementById("rev-board"), withDeparture, "reverse");
+      document.getElementById("rev-results").classList.remove("hidden");
+    } finally {
+      btn.textContent = "Chiqish vaqtini hisobla";
+    }
+  });
+
+  // Start/Stop timer — chiqish va yetib borish vaqtini bosish orqali yozib boradi
+  let tripStartTime = null;
+  let timerInterval = null;
+
+  function formatElapsed(ms) {
+    const totalSec = Math.floor(ms / 1000);
+    const mm = String(Math.floor(totalSec / 60)).padStart(2, "0");
+    const ss = String(totalSec % 60).padStart(2, "0");
+    return `${mm}:${ss}`;
+  }
+
+  document.getElementById("timer-start-btn").addEventListener("click", () => {
+    tripStartTime = Date.now();
+    document.getElementById("timer-start-btn").classList.add("hidden");
+    document.getElementById("timer-stop-btn").classList.remove("hidden");
+    document.getElementById("timer-hint").textContent = "yo'ldasan, yetib borgach bos";
+    timerInterval = setInterval(() => {
+      document.getElementById("timer-display").textContent = formatElapsed(Date.now() - tripStartTime);
+    }, 1000);
+  });
+
+  document.getElementById("timer-stop-btn").addEventListener("click", () => {
+    if (!tripStartTime) return;
+    clearInterval(timerInterval);
+    const elapsedMin = Math.max(1, Math.round((Date.now() - tripStartTime) / 60000));
+    document.getElementById("log-duration").value = elapsedMin;
+    document.getElementById("timer-hint").textContent = `${elapsedMin} daqiqa yozildi — kerak bo'lsa qo'lda tuzat`;
+    document.getElementById("timer-stop-btn").classList.add("hidden");
+    document.getElementById("timer-start-btn").classList.remove("hidden");
+    tripStartTime = null;
+  });
+
+  // Log trip - mode picker
+  let selectedMode = null;
+  const modeGrid = document.getElementById("log-mode-grid");
+  MODES.forEach(mode => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = MODE_LABELS[mode];
+    b.addEventListener("click", () => {
+      selectedMode = mode;
+      [...modeGrid.children].forEach(c => c.classList.remove("active"));
+      b.classList.add("active");
+    });
+    modeGrid.appendChild(b);
+  });
+
+  document.getElementById("log-btn").addEventListener("click", async () => {
+    const distance = parseFloat(document.getElementById("log-distance").value);
+    const duration = parseFloat(document.getElementById("log-duration").value);
+    const status = document.getElementById("log-status");
+    if (!distance || !duration || !selectedMode) {
+      status.textContent = "Masofa, mode va vaqtni to'ldir.";
+      status.className = "status";
+      return;
+    }
+    status.textContent = "Saqlanmoqda...";
+    const result = await window.saveTrip(distance, selectedMode, duration);
+    if (result.ok) {
+      status.textContent = "Saqlandi";
+      status.className = "status ok";
+      document.getElementById("log-distance").value = "";
+      document.getElementById("log-duration").value = "";
+      document.getElementById("timer-display").textContent = "00:00";
+      document.getElementById("timer-hint").textContent = "chiqish vaqtida \"Boshladim\" bos";
+    } else {
+      status.textContent = result.reason || "Saqlab bo'lmadi.";
+      status.className = "status";
+    }
+  });
+
+  // Clock
+  function tickClock() {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    document.getElementById("clock").textContent = `${hh}:${mm}`;
+  }
+  tickClock();
+  setInterval(tickClock, 1000 * 30);
+</script>
+
+<!-- FIREBASE: ixtiyoriy boyitish qismi. Import yoki config xato bo'lsa ham,
+     yuqoridagi asosiy mantiqqa hech qanday ta'sir qilmaydi. -->
+<script type="module">
+  // TODO: Life OS Firebase projectingdagi web config'ni shu yerga qo'y
+  // (Firebase Console -> Project settings -> Your apps -> Web app -> Config)
+  const firebaseConfig = {
+    apiKey: "AIzaSyDB0-xOCIiIIaYE57FlLFJtXTYsfw4UdkM",
+    authDomain: "shokh-s-project.firebaseapp.com",
+    databaseURL: "https://shokh-s-project-default-rtdb.firebaseio.com",
+    projectId: "shokh-s-project",
+    storageBucket: "shokh-s-project.firebasestorage.app",
+    messagingSenderId: "1052896898568",
+    appId: "1:1052896898568:web:92a75d5f9d12aa5f45ebbd",
+    measurementId: "G-86QX1BPPGT"
+  };
+
+  if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+    document.getElementById("config-warning")?.classList.remove("hidden");
+  } else {
+    (async () => {
+      try {
+        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+        const {
+          getFirestore, collection, addDoc, query, where, orderBy, limit, getDocs
+        } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const tripsRef = collection(db, "eta_trips");
+        const TRIPS_WINDOW = 15;
+
+        let userId = localStorage.getItem("eta_user_id");
+        if (!userId) {
+          userId = "web_" + Math.random().toString(36).slice(2, 12);
+          localStorage.setItem("eta_user_id", userId);
+        }
+
+        window.getAverageSpeed = async function (mode) {
+          try {
+            const q = query(
+              tripsRef,
+              where("userId", "==", userId),
+              where("mode", "==", mode),
+              orderBy("timestamp", "desc"),
+              limit(TRIPS_WINDOW)
+            );
+            const snap = await getDocs(q);
+            if (snap.empty) return { speedKmh: DEFAULT_SPEED_KMH[mode], sampleSize: 0 };
+            let totalDistance = 0, totalMinutes = 0;
+            snap.forEach(doc => {
+              const t = doc.data();
+              totalDistance += t.distance_km;
+              totalMinutes += t.duration_min;
+            });
+            return { speedKmh: totalDistance / (totalMinutes / 60), sampleSize: snap.size };
+          } catch (e) {
+            console.error("Firestore o'qishda xato:", e);
+            return { speedKmh: DEFAULT_SPEED_KMH[mode], sampleSize: 0 };
+          }
+        };
+
+        window.saveTrip = async function (distance, mode, duration) {
+          try {
+            await addDoc(tripsRef, {
+              userId, distance_km: distance, mode,
+              duration_min: duration, timestamp: new Date()
+            });
+            return { ok: true };
+          } catch (e) {
+            console.error("Firestore yozishda xato:", e);
+            return { ok: false, reason: "Xatolik: " + e.message };
+          }
+        };
+
+        console.log("Firebase ulandi.");
+      } catch (e) {
+        console.error("Firebase yuklanmadi (tarmoq yoki config muammosi):", e);
+        document.getElementById("config-warning")?.classList.remove("hidden");
+      }
+    })();
+  }
+</script>
+</body>
+</html>
